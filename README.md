@@ -2,9 +2,9 @@
 
 [![Windows validation](https://github.com/BurnyCoder/codex-windows-project-repair/actions/workflows/windows.yml/badge.svg)](https://github.com/BurnyCoder/codex-windows-project-repair/actions/workflows/windows.yml)
 
-![Repair phases and data boundaries](docs/architecture.svg)
-
 An unofficial utility for investigating legacy Linux project roots in **Windows Native** Codex Desktop profiles. It previews explicit selections, resolves folders through a chosen WSL distribution, and can apply reviewed root changes after process-absence checks and verified backups. Only selected `rootPaths` arrays are transformed; the tool sends no SQL updates to the source chat database. See the [implementation and its limits](docs/design.md).
+
+![Repair phases and data boundaries](docs/architecture.svg)
 
 In one private case, the user reported **“Works now!”** after the original helper ran. Startup logged migration of 31 projects and all checked original project/chat IDs remained present. Later `fs/watch` path errors still occurred. The [sanitized case study](docs/case-study.md) distinguishes these observations from automated UI verification and from tests of this generalized tool. This is one case with an unproven causal explanation, not universal compatibility.
 
