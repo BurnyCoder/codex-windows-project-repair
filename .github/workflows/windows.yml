@@ -1,0 +1,19 @@
+# Local: validate synthetic Windows fixtures. Global: CI never uses an actual Codex profile.
+# Sources: https://github.com/actions/checkout and https://docs.astral.sh/uv/guides/integration/github/
+name: Windows validation
+on: [push, pull_request, workflow_dispatch] # Local: test branches, PRs, and manual reruns.
+permissions:
+  contents: read # Global: CI has no repository write permission.
+jobs:
+  tests:
+    runs-on: windows-latest # Local: exercise ReplaceFileW and kernel mutexes on Windows.
+    timeout-minutes: 10 # Global: prevent abandoned jobs.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1; immutable reviewed action version.
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2; immutable reviewed action version.
+        with:
+          version: "0.13.5" # Local: use the current verified uv release reproducibly.
+      - run: uv sync --frozen --python 3.14 # Local: create the project-local environment from dependency metadata.
+      - run: uv run --frozen python -m unittest discover -s tests -v # Global: exercise backups, preservation, failure guards, and worker exclusion.
+      - run: uv run --frozen codex-project-repair --help # Local: validate the installed console entry point without profile access.
+      - run: uv build # Global: ensure both source distribution and wheel are buildable.

@@ -8,6 +8,11 @@ backups/
 plan.json
 *.sqlite*
 *.log
+.codex-global-state.json
+status.json
+manifest.json
+*.db
+*.db-*
 .venv/
 __pycache__/
 *.pyc
