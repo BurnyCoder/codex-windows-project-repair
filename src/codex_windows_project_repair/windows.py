@@ -2,7 +2,8 @@
 
 Sources: https://docs.python.org/3.14/library/subprocess.html,
 https://learn.microsoft.com/windows/win32/api/synchapi/nf-synchapi-createmutexw,
-https://learn.microsoft.com/powershell/module/appx/get-appxpackagemanifest
+https://learn.microsoft.com/powershell/module/appx/get-appxpackagemanifest,
+https://learn.microsoft.com/en-us/windows/dev-environment/wsl-interop
 """
 import csv  # Local: parse tasklist's machine-readable format.
 import ctypes  # Local: use a kernel lifetime guard instead of stale lockfiles.

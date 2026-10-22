@@ -1,0 +1,36 @@
+<!-- Local: static architecture diagram. Global: show mutation and read-only boundaries without private data. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="390" viewBox="0 0 980 390" role="img" aria-labelledby="title desc">
+  <title id="title">Windows Codex project repair phases</title>
+  <desc id="desc">Inspect and plan lead to reviewed changes. Task Scheduler waits for Codex to close, backs up state, and changes only selected JSON roots. SQLite is read-only. Verification compares preserved records and leaves UI checks to the user.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#547084"/></marker>
+    <style>text{font-family:Segoe UI,Arial,sans-serif;fill:#183343}.label{font-size:17px;font-weight:600}.detail{font-size:13px}.box{fill:#fff;stroke:#9ab0bf;stroke-width:1.5}.line{fill:none;stroke:#547084;stroke-width:2;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="980" height="390" rx="16" fill="#edf4f8"/>
+  <text x="28" y="35" class="label">Explicit selection → verified backup → targeted change</text>
+  <rect x="28" y="64" width="195" height="82" rx="10" class="box"/>
+  <text x="44" y="94" class="label">1. Inspect + plan</text>
+  <text x="44" y="119" class="detail">Selected IDs + chosen WSL</text>
+  <rect x="270" y="64" width="195" height="82" rx="10" class="box"/>
+  <text x="286" y="94" class="label">2. Review plan</text>
+  <text x="286" y="119" class="detail">Old root → accessible path</text>
+  <rect x="512" y="64" width="195" height="82" rx="10" class="box"/>
+  <text x="528" y="94" class="label">3. Wait for exit</text>
+  <text x="528" y="119" class="detail">One scheduler-owned worker</text>
+  <rect x="754" y="64" width="195" height="82" rx="10" class="box"/>
+  <text x="770" y="94" class="label">4. Verify backups</text>
+  <text x="770" y="119" class="detail">Exact JSON + SQLite snapshot</text>
+  <path d="M223 105 H264" class="line"/><path d="M465 105 H506" class="line"/><path d="M707 105 H748" class="line"/>
+  <rect x="754" y="212" width="195" height="82" rx="10" class="box"/>
+  <text x="770" y="242" class="label">5. Apply roots</text>
+  <text x="770" y="267" class="detail">Guarded JSON replacement</text>
+  <rect x="512" y="212" width="195" height="82" rx="10" class="box"/>
+  <text x="528" y="242" class="label">6. Verify records</text>
+  <text x="528" y="267" class="detail">Compare original IDs + links</text>
+  <rect x="270" y="212" width="195" height="82" rx="10" class="box"/>
+  <text x="286" y="242" class="label">7. Check the UI</text>
+  <text x="286" y="267" class="detail">Project creation + chat history</text>
+  <path d="M852 146 V206" class="line"/><path d="M754 253 H713" class="line"/><path d="M512 253 H471" class="line"/>
+  <text x="28" y="329" class="label">Source chat database: read-only throughout</text>
+  <text x="28" y="357" class="detail">Private plans, backups, logs, and status stay local. Unsupported state stops before application.</text>
+</svg>
