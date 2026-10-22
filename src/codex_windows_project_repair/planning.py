@@ -42,7 +42,7 @@ def create_plan(state, home, selected, distro, detach_missing):  # Global: requi
         target = probe_root(distro, root)  # Global: verify the folder through the selected environment.
         if not target and not detach_missing:  # Local: absence alone does not authorize detachment.
             raise ValueError(f"Missing folder for {project_id}; use --detach-missing only after review")  # Global: preserve its link by default.
-        changes.append({"id": project_id, "old_root": root, "new_roots": target})  # Local: reuse the proven pure transformation format.
+        changes.append({"id": project_id, "old_root": root, "new_roots": target})  # Local: reuse the storage module's tested change format.
     plan = {"schema_version": 1, "home": str(Path(home).resolve()), "distro": distro, "detach_missing": detach_missing, "changes": changes}  # Global: bind the proposal to one profile and environment.
     validate_plan(plan, home)  # Local: generated and loaded plans use the same checks.
     return plan  # Global: no live state has been written.

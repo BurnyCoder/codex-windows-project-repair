@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1; immutable reviewed action version.
       - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2; immutable reviewed action version.
         with:
-          version: "0.13.5" # Local: use the current verified uv release reproducibly.
+          version: "0.13.5" # Local: pin the uv release used by this workflow; this is not a claim about the latest release.
       - run: uv sync --frozen --python 3.14 # Local: create the project-local environment from dependency metadata.
       - run: uv run --frozen python -m unittest discover -s tests -v # Global: exercise backups, preservation, failure guards, and worker exclusion.
       - run: uv run --frozen codex-project-repair --help # Local: validate the installed console entry point without profile access.

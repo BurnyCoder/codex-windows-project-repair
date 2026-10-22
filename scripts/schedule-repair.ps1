@@ -1,4 +1,4 @@
-# Local: launch through Task Scheduler. Global: the worker survives Codex's process-tree shutdown.
+# Local: launch through Task Scheduler. Global: Windows schedules the worker independently of the initiating CLI.
 # Sources: https://learn.microsoft.com/powershell/module/scheduledtasks/register-scheduledtask
 # and https://learn.microsoft.com/powershell/module/scheduledtasks/new-scheduledtaskprincipal
 [CmdletBinding()]
@@ -20,10 +20,10 @@ if (Test-Path -LiteralPath "$repairRepo/.env") { $repairEnvArgs = @('--env-file'
 if ($Worker) { # Global: this process is owned by Windows Task Scheduler, not Codex.
     if ($TaskName -notmatch '^CodexProjectRepair-(Smoke-)?[a-f0-9]{16}$') { throw 'Unexpected worker task identity' } # Local: constrain cleanup to this tool's naming scheme.
     $repairExitCode = 1 # Global: missing launch success remains failure.
-    $repairTranscript = Join-Path $ReportRoot ('launcher-' + [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ') + '.log') # Local: retain pre-Python launch errors too.
-    try { # Global: always unregister the exact temporary task on normal failure or success.
+    $repairTranscript = Join-Path $ReportRoot ('launcher-' + [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ') + '.log') # Local: name the recording; errors outside its active interval may be absent.
+    try { # Global: attempt task cleanup on handled completion; forced termination can bypass finally.
         New-Item -ItemType Directory -Path $ReportRoot -Force | Out-Null # Local: bootstrap failure still reaches scheduler cleanup.
-        Start-Transcript -LiteralPath $repairTranscript | Out-Null # Local: record full native command output locally.
+        Start-Transcript -LiteralPath $repairTranscript | Out-Null # Local: record output during the transcript's active interval.
         if ($SmokeTest) { # Global: this branch cannot invoke apply or read any Codex profile.
             Start-Sleep -Seconds 5 # Local: keep the disposable worker alive after its launcher exits.
             [pscustomobject]@{ stage = $(if ($SimulateFailure) { 'injected_failure' } else { 'scheduler_smoke_passed' }); workerPid = $PID; task = $TaskName } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $ReportRoot 'smoke-result.json') -Encoding UTF8 # Local: write only the explicitly selected fixture output.

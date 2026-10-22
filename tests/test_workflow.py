@@ -34,7 +34,7 @@ class WorkflowTests(unittest.TestCase):  # Global: never operate on a real profi
             mocked.start()  # Local: install the deterministic observation.
             self.addCleanup(mocked.stop)  # Global: restore the production function after each test.
 
-    def test_apply_and_verify_pipeline(self):  # Global: prove the complete storage workflow on Windows.
+    def test_apply_and_verify_pipeline(self):  # Global: exercise the storage workflow on Windows with synthetic app and WSL observations.
         """Local: apply, verify, then retry; global: preserve records and idempotence."""
         result = apply_plan(self.settings, self.plan)  # Local: run real backup and ReplaceFileW.
         self.assertEqual(result["stage"], "applied")  # Global: application reports its actual phase.
@@ -49,7 +49,7 @@ class WorkflowTests(unittest.TestCase):  # Global: never operate on a real profi
         with patch("codex_windows_project_repair.workflow.backup_state", side_effect=OSError("fixture disk full")):
             with self.assertRaises(OSError):  # Global: failure must propagate to the CLI.
                 apply_plan(self.settings, self.plan)  # Local: stop before the commit phase.
-        self.assertEqual(self.settings.state.read_bytes(), original)  # Global: prove no live-style mutation occurred.
+        self.assertEqual(self.settings.state.read_bytes(), original)  # Global: verify unchanged fixture JSON after the injected failure.
         self.assertEqual(read_json(self.settings.output / "status.json")["stage"], "failed")  # Local: preserve actionable status.
 
     def test_corrupt_database_blocks_commit(self):  # Global: a broken backup source cannot authorize repair.

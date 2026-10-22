@@ -68,7 +68,7 @@ class PlanningTests(unittest.TestCase):  # Global: fixtures never read the user'
         """Local: hold the Windows mutex; global: reject a second worker for the same profile."""
         with single_worker(self.home):  # Local: acquire the profile-specific guard.
             with self.assertRaises(RuntimeError):  # Global: duplicate acquisition must fail immediately.
-                with single_worker(self.home):  # Local: simulate a second process using the same profile.
+                with single_worker(self.home):  # Local: a second acquisition in this process models contention; this is not a cross-process test.
                     self.fail("duplicate worker entered")  # Global: never reach the repair twice.
 
     def test_wait_expires_without_killing_app(self):  # Global: bound the shutdown wait without terminating work.
