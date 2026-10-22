@@ -100,7 +100,8 @@ def verify_backup(settings, directory):  # Global: compare identities without ed
             raise ValueError(f"{label} backup checksum mismatch")  # Local: refuse unreliable evidence.
     before, after = read_json(snapshots["state"]), read_json(settings.state)  # Local: read snapshots without modifying either.
     old_projects, new_projects = projects(before), projects(after)  # Global: compare only recognized state layouts.
-    report = {"legacy_project_ids_preserved": set(old_projects).issubset(new_projects), "legacy_assignments_unchanged": all(after["thread-project-assignments"].get(k) == v for k, v in before["thread-project-assignments"].items()), "tables": {}, "needs_ui_verification": True}  # Local: summarize relationships without exposing chat bodies.
+    assignments = after["thread-project-assignments"]  # Local: distinguish a missing prior key from a retained null value.
+    report = {"legacy_project_ids_preserved": set(old_projects).issubset(new_projects), "legacy_assignments_unchanged": all(k in assignments and assignments[k] == v for k, v in before["thread-project-assignments"].items()), "tables": {}, "needs_ui_verification": True}  # Local: summarize relationships without exposing chat bodies.
     with closing(sqlite3.connect(snapshots["database"].as_uri() + "?mode=ro", uri=True)) as old, closing(sqlite3.connect((settings.home / "state_5.sqlite").as_uri() + "?mode=ro", uri=True)) as new:  # Global: never mutate the source database.
         for table in ("threads", "projects"):  # Local: identifiers are fixed constants, not SQL input.
             old_ids = {row[0] for row in old.execute(f'SELECT id FROM "{table}"')}  # Local: include archived records too.

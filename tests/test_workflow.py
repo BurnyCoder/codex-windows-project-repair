@@ -86,6 +86,18 @@ class WorkflowTests(unittest.TestCase):  # Global: never operate on a real profi
         self.assertEqual(result["stage"], "applied")  # Global: preserve accurate state.
         self.assertIn("reopen_error", result)  # Local: let the user reopen manually.
 
+    def test_verification_detects_removed_null_assignment(self):  # Global: distinguish a missing key from a stored null.
+        """Local: remove a null-valued fixture association after backup; global: require exact prior-key preservation."""
+        state = read_json(self.settings.state)  # Local: read only this test's synthetic profile.
+        state["thread-project-assignments"]["unassigned"] = None  # Local: preserve a valid JSON null sentinel.
+        self.settings.state.write_text(json.dumps(state), encoding="utf-8")  # Local: establish the baseline before backup.
+        result = apply_plan(self.settings, self.plan)  # Global: generate a real preservation checkpoint.
+        state = read_json(self.settings.state)  # Local: retain the permitted repair while modeling later loss.
+        del state["thread-project-assignments"]["unassigned"]  # Local: remove only the synthetic sentinel.
+        self.settings.state.write_text(json.dumps(state), encoding="utf-8")  # Global: no real profile is involved.
+        audit = verify_backup(self.settings, result["backup"]["directory"])  # Local: compare original keys and values.
+        self.assertFalse(audit["records_preserved"])  # Global: absence is not equivalent to a preserved null value.
+
     def test_strict_json_rejects_duplicate_keys(self):  # Global: prevent silent field loss during parsing.
         """Local: supply ambiguous JSON; global: refuse it before any mutation."""
         with self.assertRaises(ValueError):  # Local: duplicate keys are not a valid repair input.
