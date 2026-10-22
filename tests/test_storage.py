@@ -13,7 +13,7 @@ from codex_windows_project_repair.storage import backup_state, build_repair, com
 
 
 class RepairTests(unittest.TestCase):  # Global: group the repair's safety contracts.
-    """Local: synthetic fixtures. Global: prove only approved roots can change."""
+    """Local: synthetic fixtures. Global: check that only approved roots change in these cases."""
 
     def setUp(self):  # Local: reset fixtures before every test; global: isolate cases.
         """Local: create linked project/chat state. Global: catch accidental deletion."""
@@ -56,12 +56,12 @@ class RepairTests(unittest.TestCase):  # Global: group the repair's safety contr
                 connection.executescript("CREATE TABLE threads(id TEXT); INSERT INTO threads VALUES ('chat');")  # Global: create a history-preservation sentinel.
             report = backup_state(state_path, Path(folder) / "backups", original)  # Local: exercise the production backup.
             self.assertEqual(Path(report["state_backup"]).read_bytes(), original)  # Global: byte-for-byte recovery is possible.
-            self.assertEqual(report["database_counts"]["threads"], 1)  # Global: the history sentinel survived the SQLite snapshot.
+            self.assertEqual(report["database_counts"]["threads"], 1)  # Global: check the fixture row count; this assertion alone does not compare all record contents.
             candidate = build_repair(self.state, self.plan)  # Local: prepare the reviewed change.
             commit_state(state_path, original, candidate, lambda: None)  # Local: use a synthetic closed-app guard.
             self.assertEqual(json.loads(state_path.read_bytes()), candidate)  # Global: verify the actual saved result.
             with closing(sqlite3.connect(database)) as connection:  # Local: inspect and close the original fixture database.
-                self.assertEqual(connection.execute("SELECT count(*) FROM threads").fetchone()[0], 1)  # Global: the source database was untouched.
+                self.assertEqual(connection.execute("SELECT count(*) FROM threads").fetchone()[0], 1)  # Global: check the source fixture's row count; this does not prove every field or byte stayed unchanged.
 
     def test_concurrent_change_aborts_commit(self):  # Global: guard against stale backups and writes.
         """Local: change bytes before commit. Global: refuse to overwrite a concurrent edit."""
@@ -77,7 +77,7 @@ class RepairTests(unittest.TestCase):  # Global: group the repair's safety contr
         changed = build_repair(self.state, self.plan)  # Local: perform the first pure transformation.
         self.assertEqual(build_repair(changed, self.plan), changed)  # Global: a second invocation is harmless.
 
-    def test_running_app_guard_prevents_write(self):  # Global: prove that application closure is mandatory.
+    def test_running_app_guard_prevents_write(self):  # Global: check that the injected running-app guard blocks this write.
         """Local: simulate a running desktop. Global: leave the original file byte-identical."""
         with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as folder:  # Local: keep the test isolated.
             state_path = Path(folder) / "state.json"  # Local: create a synthetic target.

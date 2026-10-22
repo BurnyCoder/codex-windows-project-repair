@@ -59,7 +59,7 @@ class PlanningTests(unittest.TestCase):  # Global: fixtures never read the user'
 
     def test_broken_link_not_missing(self):  # Global: preserve a broken symlink for manual review.
         """Local: model parent success, directory absence, and symlink existence."""
-        results = [SimpleNamespace(returncode=code, stdout="", stderr="") for code in (0, 1, 1, 0)]  # Local: exact test -x/-d/-e/-L responses.
+        results = [SimpleNamespace(returncode=code, stdout="", stderr="") for code in (0, 0, 1, 1, 0)]  # Local: parent -d/-x, then child -d/-e/-L responses.
         with patch("codex_windows_project_repair.windows.run_hidden", side_effect=results):
             with self.assertRaises(RuntimeError):  # Global: an existing symlink is not an absent path.
                 probe_root("TestDistro", "/home/example")  # Local: test the distinction.
@@ -68,7 +68,7 @@ class PlanningTests(unittest.TestCase):  # Global: fixtures never read the user'
         """Local: hold the Windows mutex; global: reject a second worker for the same profile."""
         with single_worker(self.home):  # Local: acquire the profile-specific guard.
             with self.assertRaises(RuntimeError):  # Global: duplicate acquisition must fail immediately.
-                with single_worker(self.home):  # Local: simulate a second process using the same profile.
+                with single_worker(self.home):  # Local: a second acquisition in this process models contention; this is not a cross-process test.
                     self.fail("duplicate worker entered")  # Global: never reach the repair twice.
 
     def test_wait_expires_without_killing_app(self):  # Global: bound the shutdown wait without terminating work.

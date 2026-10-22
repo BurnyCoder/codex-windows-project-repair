@@ -1,4 +1,4 @@
-"""Local: transform and back up state. Global: preserve projects, chats, and file ACLs.
+"""Local: transform and back up state. Global: retain records and request documented metadata merging.
 
 Sources: https://docs.python.org/3.14/library/json.html,
 https://docs.python.org/3.14/library/sqlite3.html#sqlite3.Connection.backup,
@@ -66,7 +66,7 @@ def backup_state(state_path, backup_root, original):  # Global: establish recove
                 if time.monotonic() > deadline:  # Local: use an elapsed-time deadline.
                     raise TimeoutError("SQLite backup exceeded 30 seconds")  # Global: no incomplete backup can authorize repair.
             source.backup(destination, pages=256, progress=progress)  # Global: include committed WAL contents through SQLite's backup API.
-            if destination.execute("PRAGMA quick_check").fetchall() != [("ok",)]:  # Local: verify snapshot consistency.
+            if destination.execute("PRAGMA quick_check").fetchall() != [("ok",)]:  # Local: run SQLite's structural check, not full history validation.
                 raise RuntimeError("SQLite backup integrity check failed")  # Global: never proceed with a bad backup.
             tables = {row[0] for row in destination.execute("SELECT name FROM sqlite_master WHERE type='table'")}  # Local: inspect schema only.
             counts = {name: destination.execute(f'SELECT count(*) FROM "{name}"').fetchone()[0] for name in ("threads", "projects") if name in tables}  # Local: count only fixed, trusted table names.
@@ -76,8 +76,8 @@ def backup_state(state_path, backup_root, original):  # Global: establish recove
     return report  # Local: give the caller a precise recovery record.
 
 
-def replace_preserving_metadata(target, replacement):  # Global: atomically replace content while retaining Windows ACLs.
-    """Local: call ReplaceFileW. Global: keep the replaced file's security and metadata."""
+def replace_preserving_metadata(target, replacement):  # Global: request ReplaceFileW's documented metadata merge with errors enabled.
+    """Local: replace through Windows; global: failures may partially alter files, so retain the verified backup."""
     kernel = ctypes.WinDLL("kernel32", use_last_error=True)  # Local: retain the Windows failure code.
     replace = kernel.ReplaceFileW  # Local: use the documented file-replacement primitive.
     replace.argtypes = [wintypes.LPCWSTR, wintypes.LPCWSTR, wintypes.LPCWSTR, wintypes.DWORD, wintypes.LPVOID, wintypes.LPVOID]  # Local: match the native signature.

@@ -13,7 +13,7 @@ from datetime import datetime, timezone  # Local: make timestamps unambiguous.
 from pathlib import Path  # Local: resolve manifests and snapshots precisely.
 from .config import parse_json, read_json  # Global: one strict JSON parser.
 from .planning import projects, validate_plan  # Local: require known profile and plan layouts.
-from .storage import backup_state, build_repair, commit_state, validate_database  # Global: reuse the proven preservation operations.
+from .storage import backup_state, build_repair, commit_state, validate_database  # Global: reuse the shared storage operations covered by fixture tests.
 from .windows import assert_closed, discover_app, probe_root, reopen_app, single_worker, wait_for_exit  # Local: isolate Windows behavior.
 
 
@@ -56,15 +56,15 @@ def apply_plan(settings, plan, wait=False, reopen=False):  # Global: the sole hi
     """Local: execute guarded phases; global: preserve latest state and verified recovery data."""
     with single_worker(settings.home):  # Global: also exclude workers using a different output directory.
         backup = None  # Local: retain recovery details if a later phase fails.
-        try:  # Global: leave a failure report for every application error.
+        try:  # Global: attempt failure reporting after lock acquisition; early CLI/lock errors occur outside this block.
             preflight(settings, plan)  # Local: fail early before asking the user to quit.
             app = discover_app()  # Global: never guess which process owns app state.
             if wait:  # Local: the scheduler can run while the user finishes work.
                 status(settings, "waiting_for_codex_to_close")  # Global: expose observable readiness.
-                wait_for_exit(app["executable"])  # Local: require orderly, user-controlled closure.
+                wait_for_exit(app["executable"])  # Local: require sustained observed process absence without forcing exit.
             assert_closed(app["executable"])  # Global: direct apply refuses an active desktop.
             preflight(settings, plan)  # Local: refresh filesystem assumptions after the wait.
-            original = settings.state.read_bytes()  # Global: use the latest shutdown state.
+            original = settings.state.read_bytes()  # Global: capture current bytes after the process observation.
             state = parse_json(original)  # Local: validate exactly the captured bytes used for backup and commit.
             if settings.state.read_bytes() != original:  # Global: reject an intervening writer before constructing the candidate.
                 raise RuntimeError("State changed during validation")  # Local: require another attempt.

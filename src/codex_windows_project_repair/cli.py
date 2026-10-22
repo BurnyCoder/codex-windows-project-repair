@@ -74,7 +74,7 @@ def execute(args, settings):  # Global: readable wrapper calling named implement
     return verify_backup(settings, args.backup)  # Local: the remaining command is read-only verification.
 
 
-def main():  # Global: package entry point; return clear exit codes and full diagnostics.
+def main():  # Global: package entry point; argument errors exit before logger setup.
     """Local: resolve configuration and logging; global: never hide a failed repair."""
     args = parser().parse_args()  # Local: help exits before any profile access.
     if os.name != "nt":  # Global: the Windows metadata-preserving writer is platform-specific.
@@ -87,9 +87,9 @@ def main():  # Global: package entry point; return clear exit codes and full dia
             raise SystemExit("Output directory must be outside the Codex profile")  # Global: prevent report path collisions with live data.
         settings.output.mkdir(parents=True, exist_ok=True)  # Local: create the private audit directory.
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")  # Local: avoid log filename collisions.
-        handlers.append(logging.FileHandler(settings.output / f"repair-{stamp}.log", encoding="utf-8"))  # Global: retain complete local diagnostics.
+        handlers.append(logging.FileHandler(settings.output / f"repair-{stamp}.log", encoding="utf-8"))  # Global: retain diagnostics emitted after setup; earlier failures have no log here.
     logging.Formatter.converter = time.gmtime  # Local: use UTC consistently with report timestamps.
-    logging.basicConfig(level=logging.DEBUG, format="%(asctime)sZ %(levelname)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S", handlers=handlers)  # Global: file and terminal diagnostics are emitted in real time.
+    logging.basicConfig(level=logging.DEBUG, format="%(asctime)sZ %(levelname)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S", handlers=handlers)  # Global: emit log events to file/stderr; child command output is buffered until completion.
     try:  # Global: every runtime failure produces a nonzero exit code.
         result = execute(args, settings)  # Local: perform the selected named workflow.
         print(json.dumps(result, indent=2, ensure_ascii=False))  # Global: print complete results without truncation.
