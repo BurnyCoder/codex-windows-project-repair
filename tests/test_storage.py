@@ -61,7 +61,7 @@ class RepairTests(unittest.TestCase):  # Global: group the repair's safety contr
             commit_state(state_path, original, candidate, lambda: None)  # Local: use a synthetic closed-app guard.
             self.assertEqual(json.loads(state_path.read_bytes()), candidate)  # Global: verify the actual saved result.
             with closing(sqlite3.connect(database)) as connection:  # Local: inspect and close the original fixture database.
-                self.assertEqual(connection.execute("SELECT count(*) FROM threads").fetchone()[0], 1)  # Global: the source database was untouched.
+                self.assertEqual(connection.execute("SELECT count(*) FROM threads").fetchone()[0], 1)  # Global: check the source fixture's row count; this does not prove every field or byte stayed unchanged.
 
     def test_concurrent_change_aborts_commit(self):  # Global: guard against stale backups and writes.
         """Local: change bytes before commit. Global: refuse to overwrite a concurrent edit."""

@@ -14,6 +14,7 @@ The behavior correction is [`37d89f6846784f346041eeb3a71acef5d02691f5`](https://
 | New mocked path regressions against the old implementation | Eight test methods ran; three methods failed, accounting for ten failed assertions/subtests |
 | Suite after the path correction at `37d89f6` | **32 passed in 0.650 s**, including the original seven storage tests |
 | Windows CI at `37d89f6` | [32 passed in 0.498 s](https://github.com/BurnyCoder/codex-windows-project-repair/actions/runs/39851569261/job/120078844202); CLI help and source/wheel builds passed |
+| Combined behavior/documentation branch at `631056516e929229819855c4769a84be5d13bd51` | [PR Windows CI passed](https://github.com/BurnyCoder/codex-windows-project-repair/actions/runs/39852283000/job/120081328083): fixture suite, CLI help, and package builds |
 | Installed CLI help | Root help and all four command help screens exited successfully without accessing a profile |
 | Invalid CLI option | `codex-project-repair --audit-invalid-option` exited `2` before profile access |
 | Packaging | `uv build` produced a source distribution and wheel |
@@ -36,6 +37,8 @@ git diff --check
 Timestamped local command logs are private and ignored. Times above describe these runs, not performance benchmarks. Python tests use disposable JSON/SQLite and actual Windows replacement/mutex APIs while mocking app/WSL observations. The mutex test acquires the same name twice within one process; it does not establish cross-session exclusion. The suite does not exercise live WSL translation, actual project creation, every metadata field, or full chat-content/UI preservation.
 
 The correction CI job used **Windows Server 2025**, **CPython 3.14.8**, and **uv 0.13.5**, as reported in its public logs. The workflow's `--python 3.14` selects an available interpreter in that series; it does not pin a patch release. Documentation/comment edits after `37d89f6` were checked by AST comparison to leave Python behavior unchanged, including all seven original test-method ASTs. Final PR checks validate the combined branch before merging.
+
+One review pass covered correctness, failure handling, preservation scope, maintainability, source attribution, and publication privacy. It caught a remaining test comment claiming that an unchanged row count proved an untouched database; that comment now describes only the count assertion. No further executable changes resulted from the review. [PR #2](https://github.com/BurnyCoder/codex-windows-project-repair/pull/2) records the final branch and checks.
 
 ## Historical CI and scheduler evidence
 
