@@ -61,12 +61,16 @@ def probe_root(distro, root):  # Global: distinguish absence from permissions an
         if result.returncode not in (0, 1):  # Global: a WSL error is never evidence of absence.
             raise RuntimeError(f"WSL metadata check failed: {path}")  # Local: require a usable environment.
         return result.returncode == 0  # Local: expose the exact predicate result.
-    if not test("-x", str(PurePosixPath(root).parent)):  # Global: parent traversal is required to prove absence.
+    parent = str(PurePosixPath(root).parent)  # Local: test the immediate containing path before interpreting child predicates.
+    if not test("-d", parent) or not test("-x", parent):  # Global: GNU test -x also accepts executable files; require a searchable directory (https://www.gnu.org/software/coreutils/manual/html_node/File-type-tests.html).
         raise RuntimeError(f"Cannot access parent of {root}")  # Local: stop before -d could be misread.
     if test("-d", root):  # Local: resolve only a known directory.
         result = run_hidden(["wsl.exe", "-d", distro, "--exec", "wslpath", "-w", root])  # Global: let the selected distro translate drive mounts and UNC paths.
         result.check_returncode()  # Local: never use an error as a destination.
-        target = result.stdout.strip()  # Local: remove the command's trailing newline.
+        ending = "\r\n" if result.stdout.endswith("\r\n") else "\n"  # Local: select at most one terminal line ending.
+        target = result.stdout.removesuffix(ending)  # Global: preserve filename whitespace; https://docs.python.org/3.14/builtins/stdtypes.html#str.removesuffix.
+        if not target or "\r" in target or "\n" in target:  # Global: reject empty or multiline output before any Windows query.
+            raise RuntimeError("Expected one nonempty path from wslpath")  # Local: ambiguous output cannot become a proposed root.
         if not PureWindowsPath(target).is_absolute() or not Path(target).is_dir():  # Global: verify native Windows can access the proposed root.
             raise RuntimeError(f"Translated directory is not accessible from Windows: {target}")  # Local: reject unusable paths.
         return [target]  # Local: v1 changes one root only.
