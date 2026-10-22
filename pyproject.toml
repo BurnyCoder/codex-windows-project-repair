@@ -1,0 +1,18 @@
+[project]
+name = "codex-windows-project-repair"
+version = "0.1.0"
+description = "Backed-up repair of legacy WSL project roots in Windows Codex Desktop"
+readme = "README.md"
+authors = [
+    { name = "BurnyCoder" }
+]
+requires-python = ">=3.14"
+dependencies = []
+license = "MIT"
+
+[project.scripts]
+codex-project-repair = "codex_windows_project_repair.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"

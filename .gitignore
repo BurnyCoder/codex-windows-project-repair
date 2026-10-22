@@ -1,0 +1,15 @@
+# Local runtime data may contain private project and chat metadata.
+.env
+.env.*
+!.env.example
+.local/
+outputs/
+backups/
+plan.json
+*.sqlite*
+*.log
+.venv/
+__pycache__/
+*.pyc
+dist/
+*.egg-info/
